@@ -1,45 +1,42 @@
-version: '2'
+version: '3.3'
 
 services:
-
   elasticsearch:
+    restart: always
+    image: keiko.ucsd.edu:2080/elasticsearch
     build: elasticsearch/
-    volumes:
-      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-    ports:
-      - "9200:9200"
-      - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
-      - elk
+      - isolated_network
+    container_name: elasticsearch
 
   logstash:
+    restart: always
+    image: keiko.ucsd.edu:2080/logstash
     build: logstash/
-    volumes:
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./logstash/pipeline:/usr/share/logstash/pipeline
     ports:
-      - "5000:5000"
+      - "12201:12201/udp"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
-      - elk
+      - isolated_network
     depends_on:
       - elasticsearch
+    container_name: logstash
 
   kibana:
+    restart: always
+    image: keiko.ucsd.edu:2080/kibana 
     build: kibana/
-    volumes:
-      - ./kibana/config/:/usr/share/kibana/config
     ports:
-      - "5601:5601"
+      - "7050:5601"
     networks:
-      - elk
+      - isolated_network
     depends_on:
       - elasticsearch
+    container_name: kibana
 
 networks:
-
-  elk:
-    driver: bridge
+  isolated_network:
+    external: true
